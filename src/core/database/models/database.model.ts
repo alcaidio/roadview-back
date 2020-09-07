@@ -6,6 +6,7 @@ export interface DatabaseConfigAttributes {
   port?: number | string;
   dialect?: string;
   urlDatabase?: string;
+  schema?: string;
 }
 
 export interface DatabaseConfig {
