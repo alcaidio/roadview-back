@@ -1,5 +1,6 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
-import { LngLat } from './models/panoramas.model';
+import { PanoramaDTO } from './interfaces/panorama.dto';
+import { Panorama } from './interfaces/panorama.entity';
 import { PanoramasService } from './panoramas.service';
 
 @Controller('panoramas')
@@ -7,18 +8,19 @@ export class PanoramasController {
   constructor(private readonly panoramasService: PanoramasService) {}
 
   @Get()
-  async findAll() {
-    return await this.panoramasService.findAll();
-  }
-
-  @Get('limit')
-  async findAllWithLimit(@Query() limit: number) {
-    return await this.panoramasService.findAll(limit);
+  async findAll(@Query('limit') limit?: number) {
+    if (limit > 0) {
+      return await this.panoramasService.findAllWithLimit(limit);
+    } else {
+      return await this.panoramasService.findAll();
+    }
   }
 
   @Get('find')
-  async findByLngLat(@Query() point: LngLat) {
-    return await this.panoramasService.findByLngLat(point);
+  async findByLngLat(@Query() point: { lng: number; lat: number }) {
+    return await this.panoramasService
+      .findByLngLat(point)
+      .then(panorama => convertInGeoJson(panorama[0]));
   }
 
   @Get(':id')
@@ -32,6 +34,24 @@ export class PanoramasController {
     @Query('distance') distance: number,
   ) {
     if (distance === undefined) distance = 10;
-    return await this.panoramasService.findOneByIdWithHotspot(+id, distance);
+    return await this.panoramasService
+      .findOneByIdWithHotspot(+id, distance)
+      .then(panorama => convertInGeoJson(panorama));
   }
 }
+
+export const convertInGeoJson = (panorama: Panorama): PanoramaDTO => {
+  return {
+    id: panorama.id,
+    geometry: {
+      type: panorama.location.type,
+      coordinates: panorama.location.coordinates,
+    },
+    properties: {
+      image: panorama.image,
+      direction: +panorama.direction,
+      timestamp: +panorama.timestamp,
+      hotspots: panorama.hotspots,
+    },
+  };
+};

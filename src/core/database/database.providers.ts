@@ -1,5 +1,5 @@
 import { Sequelize } from 'sequelize-typescript';
-import { Panorama } from 'src/panoramas/panorama.entity';
+import { Panorama } from 'src/panoramas/interfaces/panorama.entity';
 import { DEVELOPMENT, PRODUCTION, SEQUELIZE, TEST } from '../constants';
 import { databaseConfig } from './database.config';
 

@@ -1,5 +1,4 @@
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
-import { Location } from './models/panoramas.model';
 
 @Table
 export class Panorama extends Model<Panorama> {
@@ -32,7 +31,7 @@ export class Panorama extends Model<Panorama> {
     type: DataType.GEOMETRY,
     allowNull: false,
   })
-  location: Location;
+  location: GeoJSON.Point;
 
   hotspots: {
     distance: number;

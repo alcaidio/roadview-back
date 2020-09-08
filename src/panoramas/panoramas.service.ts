@@ -2,8 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import sequelize, { Op } from 'sequelize';
 import { PANORAMA_REPOSITORY } from 'src/core/constants';
 import { WGS84ToLambert93 } from 'src/core/utils/postgis.util';
-import { LngLat } from './models/panoramas.model';
-import { Panorama } from './panorama.entity';
+import { Panorama } from './interfaces/panorama.entity';
+import { LngLat } from './interfaces/panorama.model';
 
 @Injectable()
 export class PanoramasService {
@@ -12,16 +12,17 @@ export class PanoramasService {
     private readonly panoramaRepository: typeof Panorama,
   ) {}
 
-  async findAll(limit = 0): Promise<Panorama[]> {
+  async findAll(): Promise<Panorama[]> {
+    return await this.panoramaRepository.findAll<Panorama>();
+  }
+
+  async findAllWithLimit(limit: number): Promise<Panorama[]> {
     return await this.panoramaRepository.findAll<Panorama>({ limit });
   }
 
   async findByLngLat(point: LngLat, limit = 1): Promise<Panorama[]> {
-    const from = sequelize.fn(
-      'ST_GeomFromText',
-      `POINT(${point.lng} ${point.lat})`,
-      4326,
-    );
+    const { lng, lat } = point;
+    const from = sequelize.fn('ST_GeomFromText', `POINT(${lng} ${lat})`, 4326);
     return await this.panoramaRepository.findAll<Panorama>({
       order: sequelize.fn('ST_Distance', sequelize.col('location'), from),
       limit,
@@ -34,7 +35,7 @@ export class PanoramasService {
     });
   }
 
-  async findOneByIdWithHotspot(id: number, around: number): Promise<any> {
+  async findOneByIdWithHotspot(id: number, around: number): Promise<Panorama> {
     const panorama = await this.findOneById(id);
     const [lng, lat] = panorama.location.coordinates;
     const from = sequelize.fn('ST_GeomFromText', `POINT(${lng} ${lat})`, 4326);
