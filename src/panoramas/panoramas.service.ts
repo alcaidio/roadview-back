@@ -4,6 +4,7 @@ import { PANORAMA_REPOSITORY } from 'src/core/constants';
 import { WGS84ToLambert93 } from 'src/core/utils/postgis.util';
 import { Panorama } from './interfaces/panorama.entity';
 import { LngLat } from './interfaces/panorama.model';
+import { Hotspot } from './interfaces/panorama.dto';
 
 @Injectable()
 export class PanoramasService {
@@ -35,7 +36,7 @@ export class PanoramasService {
     });
   }
 
-  async findOneByIdWithHotspot(id: number, around: number): Promise<Panorama> {
+  async findHotspotsByPanoramaId(id: number, around: number) {
     const panorama = await this.findOneById(id);
     const [lng, lat] = panorama.location.coordinates;
     const from = sequelize.fn('ST_GeomFromText', `POINT(${lng} ${lat})`, 4326);
@@ -60,9 +61,6 @@ export class PanoramasService {
       order: distance,
       offset: 1,
     });
-
-    panorama.setDataValue('hotspots', hotspots as any);
-
-    return panorama;
+    return hotspots;
   }
 }

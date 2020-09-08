@@ -34,13 +34,18 @@ export class PanoramasController {
     @Query('distance') distance: number,
   ) {
     if (distance === undefined) distance = 10;
-    return await this.panoramasService
-      .findOneByIdWithHotspot(+id, distance)
-      .then(panorama => convertInGeoJson(panorama));
+    return await this.panoramasService.findOneById(+id).then(panorama => {
+      return this.panoramasService
+        .findHotspotsByPanoramaId(panorama.id, distance)
+        .then(hotspots => convertInGeoJson(panorama, hotspots));
+    });
   }
 }
 
-export const convertInGeoJson = (panorama: Panorama): PanoramaDTO => {
+export const convertInGeoJson = (
+  panorama: Panorama,
+  hotspots?: any,
+): PanoramaDTO => {
   return {
     id: panorama.id,
     geometry: {
@@ -51,7 +56,7 @@ export const convertInGeoJson = (panorama: Panorama): PanoramaDTO => {
       image: panorama.image,
       direction: +panorama.direction,
       timestamp: +panorama.timestamp,
-      hotspots: panorama.hotspots,
+      hotspots,
     },
   };
 };

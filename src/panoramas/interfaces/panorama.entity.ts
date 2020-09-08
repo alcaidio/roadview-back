@@ -32,9 +32,4 @@ export class Panorama extends Model<Panorama> {
     allowNull: false,
   })
   location: GeoJSON.Point;
-
-  hotspots: {
-    distance: number;
-    direction: number;
-  }[];
 }
