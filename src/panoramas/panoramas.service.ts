@@ -20,12 +20,16 @@ export class PanoramasService {
     return await this.panoramaRepository.findAll<Panorama>({ limit });
   }
 
-  async findByLngLat(point: LngLat, limit = 1): Promise<Panorama[]> {
+  // async findInBbox(bbox: GeoJSON.BBox): Promise<Panorama[]> {
+  //   sequelize.q
+  // }
+
+  async findNearestPointByLngLat(point: LngLat): Promise<Panorama[]> {
     const { lng, lat } = point;
     const from = sequelize.fn('ST_GeomFromText', `POINT(${lng} ${lat})`, 4326);
     return await this.panoramaRepository.findAll<Panorama>({
       order: sequelize.fn('ST_Distance', sequelize.col('location'), from),
-      limit,
+      limit: 1,
     });
   }
 
@@ -35,21 +39,23 @@ export class PanoramasService {
     });
   }
 
-  async findHotspotsByPanoramaId(id: number, around: number) {
+  async findHotspotsByPanoramaId(id: number, from = 0, to: number) {
     const panorama = await this.findOneById(id);
     const [lng, lat] = panorama.location.coordinates;
-    const from = sequelize.fn('ST_GeomFromText', `POINT(${lng} ${lat})`, 4326);
+    const position = sequelize.fn(
+      'ST_GeomFromText',
+      `POINT(${lng} ${lat})`,
+      4326,
+    );
+    const point = sequelize.col('location');
+
     const distance = sequelize.fn(
       'ST_Distance',
-      WGS84ToLambert93(sequelize.col('location')),
-      WGS84ToLambert93(from),
+      WGS84ToLambert93(point),
+      WGS84ToLambert93(position),
     );
 
-    const direction = sequelize.fn(
-      'ST_Azimuth',
-      sequelize.col('location'),
-      from,
-    );
+    const direction = sequelize.fn('ST_Azimuth', position, point);
 
     const hotspots = await this.panoramaRepository.findAll({
       attributes: [
@@ -57,7 +63,7 @@ export class PanoramasService {
         [distance, 'distance'],
         [sequelize.fn('degrees', direction), 'direction'],
       ],
-      where: sequelize.where(distance, { [Op.lte]: around }),
+      where: sequelize.where(distance, { [Op.gte]: from, [Op.lte]: to }),
       order: distance,
       offset: 1,
     });
