@@ -4,7 +4,6 @@ import { PANORAMA_REPOSITORY } from 'src/core/constants';
 import { WGS84ToLambert93 } from 'src/core/utils/postgis.util';
 import { Panorama } from './interfaces/panorama.entity';
 import { LngLat } from './interfaces/panorama.model';
-import { Hotspot } from './interfaces/panorama.dto';
 
 @Injectable()
 export class PanoramasService {
@@ -54,6 +53,7 @@ export class PanoramasService {
 
     const hotspots = await this.panoramaRepository.findAll({
       attributes: [
+        'id',
         [distance, 'distance'],
         [sequelize.fn('degrees', direction), 'direction'],
       ],

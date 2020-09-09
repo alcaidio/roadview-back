@@ -10,6 +10,7 @@ export interface PanoramaDTO {
 }
 
 export interface Hotspot {
+  panoId: number;
   distance: number;
   direction: number;
 }
