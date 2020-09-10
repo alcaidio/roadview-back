@@ -13,7 +13,9 @@ export class PanoramasService {
   ) {}
 
   async findAll(): Promise<Panorama[]> {
-    return await this.panoramaRepository.findAll<Panorama>();
+    return await this.panoramaRepository.findAll<Panorama>({
+      order: sequelize.col('id'),
+    });
   }
 
   async findAllWithLimit(limit: number): Promise<Panorama[]> {
